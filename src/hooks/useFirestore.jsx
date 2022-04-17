@@ -1,6 +1,13 @@
 import { useReducer, useEffect, useState } from 'react'
-import { projectFirestore, timestamp } from '../firebase/config'
-import { collection, doc, deleteDoc } from 'firebase/firestore'
+import { projectFirestore } from '../firebase/config'
+import {
+  collection,
+  doc,
+  deleteDoc,
+  Timestamp,
+  addDoc,
+  updateDoc
+} from 'firebase/firestore'
 
 let initialState = {
   document: null,
@@ -22,6 +29,13 @@ const firestoreReducer = (state, action) => {
       }
     case 'DELETED_DOCUMENT':
       return { isPending: false, document: null, success: true, error: null }
+    case 'UPDATED_DOCUMENT':
+      return {
+        isPending: false,
+        document: action.payload,
+        success: true,
+        error: null
+      }
     case 'ERROR':
       return {
         isPending: false,
@@ -34,12 +48,12 @@ const firestoreReducer = (state, action) => {
   }
 }
 
-export const useFirestore = c => {
+export const useFirestore = myCol => {
   const [response, dispatch] = useReducer(firestoreReducer, initialState)
   const [isCancelled, setIsCancelled] = useState(false)
 
   // collection ref
-  const ref = collection(projectFirestore, c)
+  const ref = collection(projectFirestore, myCol)
 
   // only dispatch is not cancelled
   const dispatchIfNotCancelled = action => {
@@ -53,8 +67,8 @@ export const useFirestore = c => {
     dispatch({ type: 'IS_PENDING' })
 
     try {
-      const createdAt = timestamp.fromDate(new Date())
-      const addedDocument = await ref.add({ ...doc, createdAt })
+      const createdAt = Timestamp.fromDate(new Date())
+      const addedDocument = await addDoc(ref, { ...doc, createdAt })
       dispatchIfNotCancelled({ type: 'ADDED_DOCUMENT', payload: addedDocument })
     } catch (err) {
       dispatchIfNotCancelled({ type: 'ERROR', payload: err.message })
@@ -74,9 +88,23 @@ export const useFirestore = c => {
     }
   }
 
+  // update a document
+  const updateDocument = async (id, updates) => {
+    dispatch({ type: 'IS_PENDING' })
+
+    try {
+      const updatedDoc = await updateDoc(doc(ref, id), updates)
+      dispatchIfNotCancelled({ type: 'UPDATED_DOCUMENT', payload: updatedDoc })
+      return updatedDoc
+    } catch (err) {
+      dispatchIfNotCancelled({ type: 'ERROR', payload: err.message })
+      return null
+    }
+  }
+
   useEffect(() => {
     return () => setIsCancelled(true)
   }, [])
 
-  return { addDocument, deleteDocument, response }
+  return { addDocument, deleteDocument, updateDocument, response }
 }
