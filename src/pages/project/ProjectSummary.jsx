@@ -4,12 +4,15 @@ import './Project.css'
 import Avatar from '../../component/Avatar'
 import { useFirestore } from '../../hooks/useFirestore'
 import { useAuthContext } from '../../hooks/useAuthContext'
+import { useNavigate } from 'react-router-dom'
 
 export default function ProjectSummary({ project }) {
   const { deleteDocument } = useFirestore('projects')
   const { user } = useAuthContext()
+  let navigate = useNavigate()
   const handleDelete = e => {
     deleteDocument(project.id)
+    navigate('/')
   }
 
   return (
@@ -29,12 +32,12 @@ export default function ProjectSummary({ project }) {
             </div>
           ))}
         </div>
-        {user.uid === project.createdBy.id && (
-          <button className="btn" onClick={handleDelete}>
-            Mark as Complete
-          </button>
-        )}
       </div>
+      {user.uid === project.createdBy.id && (
+        <button className="btn" onClick={() => handleDelete()}>
+          Mark as Complete
+        </button>
+      )}
     </div>
   )
 }

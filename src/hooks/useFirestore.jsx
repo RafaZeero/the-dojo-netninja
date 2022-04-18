@@ -80,9 +80,9 @@ export const useFirestore = myCol => {
     dispatch({ type: 'IS_PENDING' })
 
     try {
-      const newRef = doc(projectFirestore, ref, id)
-      await deleteDoc(newRef)
+      const newRef = await deleteDoc(doc(ref, id))
       dispatchIfNotCancelled({ type: 'DELETED_DOCUMENT' })
+      return newRef
     } catch (err) {
       dispatchIfNotCancelled({ type: 'ERROR', payload: 'could not delete' })
     }

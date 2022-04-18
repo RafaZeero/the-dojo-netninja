@@ -4,6 +4,7 @@ import { useAuthContext } from '../../hooks/useAuthContext'
 import { useFirestore } from '../../hooks/useFirestore'
 import { v4 as uuidv4 } from 'uuid'
 import Avatar from '../../component/Avatar'
+import formatDistanceToNow from 'date-fns/formatDistanceToNow'
 
 export default function ProjectComments({ project }) {
   const [newComment, setNewComment] = useState('')
@@ -33,7 +34,7 @@ export default function ProjectComments({ project }) {
       <h4>Project comments</h4>
 
       <ul>
-        {project.comments.length &&
+        {project.comments.length > 0 &&
           project.comments.map(comment => (
             <li key={comment.id}>
               <div className="comment-author">
@@ -41,7 +42,11 @@ export default function ProjectComments({ project }) {
                 <p>{comment.displayName}</p>
               </div>
               <div className="comment-date">
-                <p>**DATE HERE**</p>
+                <p>
+                  {formatDistanceToNow(comment.createdAt.toDate(), {
+                    addSuffix: true
+                  })}
+                </p>
               </div>
               <div className="comment-content">
                 <p>{comment.content}</p>
